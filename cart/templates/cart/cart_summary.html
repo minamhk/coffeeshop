@@ -1,0 +1,117 @@
+{% extends "shop/base.html"%}
+{% load static %}
+{% load humanize %}
+{%block content %}
+        <!-- Header-->
+        <header class="bg-dark py-5">
+            <div class="container px-4 px-lg-5 my-5">
+                <div class="text-center text-white">
+                    <h1 class="display-4 fw-bolder">سبد خرید شما 🛍️</h1>
+                    <p class="lead fw-normal text-white-50 mb-0"> </p>
+                    <i style="font-size:35px" class="fa"></i>      
+                </div>
+            </div>
+
+            <style>
+            header {
+                height: 300px;
+                background-image: url("{% static 'shop/assets/pink.jpg' %}");
+                background-size: auto;
+                background-position: center;
+            }
+            </style>
+
+
+          </header>
+        <br><br><br><br>
+    {%if cart_products%}
+    {%for product in cart_products%}
+    <div class="container">
+      <div class="card mb-3">
+      <div class="row g-0">
+        <div class="col-md-4">
+            <img src="{{product.picture.url}}" class="img-fluid rounded-start" alt="...">
+        </div>
+          <div class="col-md-8">
+          <div class="card-body">
+            <h3 class="card-title">{{ product.name}} </h3><br>
+            <p class="card-text"> 🔸 در دسته {{product.category}} 🔸 </p>
+            {% if product.is_sale%}
+                <h5><p class="card-text"> 💰  قیمت قبل از تخفیف : <strike>{{product.price|intcomma}} تومان</strike> </p></h5>
+              <h5><p class="card-text"> 💰 قیمت فعلی :   {{product.sale_price|intcomma}} تومان</p></h5>
+            {%else%}
+                <h5><p class="card-text">💰 قیمت :   {{product.price|intcomma}} تومان </p></h5>
+            {%endif%}
+            <br>
+            <h2> <p class="card-text"> تعداد : 
+            <select class="form-select"  id='select{{product.id}}'>
+              {% for key,value in quantities.items %}
+              {%if key == product.id|slugify%}
+                <option selected>{{value}}</option>
+              {%endif%}
+              {%endfor%}
+              <option value="1">۱</option>
+              <option value="2">۲</option>
+              <option value="3">۳</option>
+              <option value="4">۴</option>
+              <option value="5">۵</option>
+              <option value="6">۶</option>
+            </select>
+            </p></h2>
+            <br>
+            <button type='button' data-index={{product.id}} class='btn btn-primary update-cart'>ویرایش</button>
+            <button type='button' data-index={{product.id}} class='btn btn-danger delete-product'>حذف از سبد خرید</button>
+            <br><br>
+          </div>
+          </div>  
+      </div>
+      </div>
+    </div> 
+      {%endfor%} 
+      <div class='box'> 
+      <h3> مجموع سفارشات {{total|intcomma}} تومان  </h3>
+      </div>
+      {%else%}
+      <center><h3 class='container'>سبد خرید شما خالی است  🥲</h3>
+      {%endif%}
+      <br><br><br><br><br><br>
+<script>
+  $(document).on('click','.update-cart',function(e){
+  e.preventDefault();
+  var productid = $(this).data('index')
+    $.ajax({
+      type:'POST',
+      url:'{% url 'cart_update' %}',
+      data:{
+        product_id: $(this).data('index'),
+        product_qty:$('#select' + productid + ' option:selected').text(),
+        csrfmiddlewaretoken:'{{csrf_token}}',
+        action:'post'
+      },
+      success:function(jason){
+        location.reload();
+      },
+      error:function(xhr,errmsg,err){
+      }
+    })
+})
+
+  $(document).on('click','.delete-product',function(e){
+  e.preventDefault();
+    $.ajax({
+      type:'POST',
+      url:'{% url 'cart_delete' %}',
+      data:{
+        product_id: $(this).data('index'),
+        csrfmiddlewaretoken:'{{csrf_token}}',
+        action:'post'
+      },
+      success:function(jason){
+        location.reload();
+      },
+      error:function(xhr,errmsg,err){
+      }
+    })
+})
+</script>
+{%endblock%}
